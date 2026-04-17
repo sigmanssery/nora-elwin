@@ -1,1 +1,148 @@
-1
+AI 填入：{{LOCATION}} {{TIME_PERIOD}} {{SCENE_DESC}} {{STORY_PARAGRAPHS}} {{NORA_THOUGHT}}
+時間、日期、離線時長由 Tampermonkey 腳本從 Railway API 取得並透過 postMessage 傳入。
+每輪回覆結束後請讀取對話歷史中最新的 <div id="nora-api-data"> 內容，作為下一輪的數值基準。
+
+圖片對照（AI根據{{LOCATION}}自動選擇）：
+臥室→Master_Bedroom-3 / 客廳→Living_and_Dining_Room-1 / 餐廳→Living_and_Dining_Room-2
+書房→Library-8 / 陽台→Balcony-5 / 廚房→Kitchen-6 / 走廊/浴室→Master_Bedroom-7
+
+<style>
+@keyframes nora-pulse{0%,100%{opacity:0.1;transform:scale(0.8);}50%{opacity:1;transform:scale(1.2);}}
+</style>
+
+<text-reply>
+<div style="background-color:#120e11;width:100%;display:flex;flex-direction:column;align-items:center;gap:0;font-family:Georgia,serif;padding-bottom:32px;position:relative;overflow:hidden;">
+
+  <div id="nora-flies" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:hidden;"></div>
+
+  <img id="room-img" src="" style="width:100%;max-height:320px;object-fit:cover;object-position:center;display:block;opacity:0;transition:opacity 0.8s;filter:sepia(15%) brightness(0.88) saturate(0.80) hue-rotate(8deg) contrast(0.95);position:relative;z-index:1;">
+
+  <div style="width:90%;max-width:800px;background:#1e1620;border-radius:0 0 10px 10px;overflow:hidden;border:0.5px solid rgba(176,122,144,0.13);margin-bottom:16px;position:relative;z-index:1;">
+    <div id="nora-sh" style="display:flex;align-items:center;justify-content:space-between;padding:9px 16px;cursor:pointer;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="width:5px;height:5px;border-radius:50%;background:#c9839e;"></div>
+        <span id="nora-sc" style="font-family:monospace;font-size:13px;color:#e8a4bc;letter-spacing:1px;">--:--</span>
+        <span style="font-size:11px;color:#7a5568;font-family:sans-serif;letter-spacing:1px;">{{TIME_PERIOD}}</span>
+      </div>
+      <span style="font-size:11px;color:#7a5568;font-family:sans-serif;">{{LOCATION}} · <span id="nora-ds">----</span></span>
+    </div>
+    <div id="nora-sb" style="max-height:0;overflow:hidden;transition:max-height 0.3s ease;">
+      <div style="padding:6px 16px 12px;border-top:0.5px solid rgba(176,122,144,0.08);display:flex;flex-direction:column;gap:6px;">
+        <div style="display:flex;justify-content:space-between;"><span style="font-size:10px;color:#5a3a50;font-family:sans-serif;letter-spacing:1.5px;">日期</span><span id="nora-date" style="font-size:12px;color:#c9b8c4;font-family:sans-serif;">----</span></div>
+        <div style="display:flex;justify-content:space-between;"><span style="font-size:10px;color:#5a3a50;font-family:sans-serif;letter-spacing:1.5px;">星期</span><span id="nora-week" style="font-size:12px;color:#c9b8c4;font-family:sans-serif;">----</span></div>
+        <div style="display:flex;justify-content:space-between;"><span style="font-size:10px;color:#5a3a50;font-family:sans-serif;letter-spacing:1.5px;">地點</span><span style="font-size:12px;color:#c9b8c4;font-family:sans-serif;">{{LOCATION}}</span></div>
+        <div style="display:flex;justify-content:space-between;"><span style="font-size:10px;color:#5a3a50;font-family:sans-serif;letter-spacing:1.5px;">離上次離開</span><span id="nora-abs" style="font-size:12px;color:#c9b8c4;font-family:sans-serif;">----</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:rgba(176,122,144,0.05);color:#9a7888;padding:12px 20px;border-radius:10px;max-width:800px;width:90%;font-size:13px;font-style:italic;line-height:1.9;text-align:center;margin-bottom:16px;position:relative;z-index:1;">
+    {{SCENE_DESC}}
+  </div>
+
+  <div style="background:rgba(255,255,255,0.03);color:#f0dce8;padding:25px;border-radius:15px;max-width:800px;width:90%;line-height:1.85;font-size:1.05em;margin-bottom:16px;position:relative;z-index:1;">
+    {{STORY_PARAGRAPHS}}
+  </div>
+
+  <details style="width:90%;max-width:800px;margin-bottom:8px;position:relative;z-index:1;">
+    <summary style="padding:10px 16px;border-radius:10px;color:#f0dce8;background:linear-gradient(135deg,rgba(176,122,144,0.5),rgba(100,80,130,0.5));text-align:center;font-size:1em;cursor:pointer;font-family:sans-serif;list-style:none;">內心想法</summary>
+    <div style="background:rgba(176,122,144,0.08);border-radius:0 0 10px 10px;padding:16px;color:#c9b8c4;line-height:1.8;">
+      <p style="border-left:3px solid rgba(176,122,144,0.7);padding:0.5em 12px;font-style:italic;background:rgba(176,122,144,0.08);border-radius:6px;">
+        <strong style="color:#c9839e;font-size:11px;letter-spacing:1px;display:block;margin-bottom:4px;">NORA</strong>
+        {{NORA_THOUGHT}}
+      </p>
+    </div>
+  </details>
+
+  <div id="nora-api-data" style="display:none">等待API資料...</div>
+
+</div>
+</text-reply>
+
+<script>
+(function(){
+  var BASE='https://raw.githubusercontent.com/maker4045d-eng/Nora-s-everything/main/';
+  var IMGS={
+    '臥室':BASE+'Contemporary%20Luxury%20Residence_Master_Bedroom-3.jpeg',
+    '客廳':BASE+'Contemporary%20Luxury%20Residence_Living_and_Dining_Room-1.jpeg',
+    '餐廳':BASE+'Contemporary%20Luxury%20Residence_Living_and_Dining_Room-2.jpeg',
+    '書房':BASE+'Contemporary%20Luxury%20Residence_Library-8.jpeg',
+    '陽台':BASE+'Contemporary%20Luxury%20Residence_Balcony-5.jpeg',
+    '廚房':BASE+'Contemporary%20Luxury%20Residence_Kitchen-6.jpeg',
+    '走廊':BASE+'Contemporary%20Luxury%20Residence_Master_Bedroom-7.jpeg',
+    '浴室':BASE+'Contemporary%20Luxury%20Residence_Master_Bedroom-7.jpeg'
+  };
+  var loc='{{LOCATION}}';
+  var img=document.getElementById('room-img');
+  if(img){
+    var url=IMGS[loc]||IMGS['臥室'];
+    img.src=url;
+    img.onload=function(){img.style.opacity='1';};
+    img.onerror=function(){img.style.display='none';};
+  }
+
+  var wk=['日','一','二','三','四','五','六'];
+  function pad(n){return String(n).padStart(2,'0');}
+
+  var now=new Date();
+  var sc=document.getElementById('nora-sc');
+  var dt=document.getElementById('nora-date');
+  var wkEl=document.getElementById('nora-week');
+  var ds=document.getElementById('nora-ds');
+  if(sc)sc.textContent=pad(now.getHours())+':'+pad(now.getMinutes());
+  var dateStr=now.getFullYear()+'年'+(now.getMonth()+1)+'月'+now.getDate()+'日';
+  if(dt)dt.textContent=dateStr;
+  if(wkEl)wkEl.textContent='星期'+wk[now.getDay()];
+  if(ds)ds.textContent=dateStr;
+
+  var sh=document.getElementById('nora-sh');
+  var sb=document.getElementById('nora-sb');
+  if(sh&&sb){sh.addEventListener('click',function(){sb.style.maxHeight=sb.style.maxHeight?'':'160px';});}
+
+  var abEl=document.getElementById('nora-abs');
+  var dataEl=document.getElementById('nora-api-data');
+
+  function applyData(d){
+    if(!d||!d.absence)return;
+    if(abEl)abEl.textContent=d.absence.display;
+    if(dataEl)dataEl.textContent=JSON.stringify({
+      REAL_TIMESTAMP:d.now,
+      ABSENCE:{duration_min:d.absence.duration_min,display:d.absence.display,tier:d.absence.tier},
+      STATS:d.stats,
+      BROKEN:d.broken
+    });
+    console.log('[NORA_RECV] 收到API數據',d.absence.display);
+  }
+
+  // 接收 Tampermonkey 廣播
+  window.addEventListener('message',function(e){
+    if(!e.data||e.data.type!=='NORA_API_DATA')return;
+    applyData(e.data.data);
+  });
+
+  // 主動向父框架請求數據
+  setTimeout(function(){
+    window.parent.postMessage({type:'NORA_REQUEST_DATA'},'*');
+  },100);
+
+  // 螢火蟲
+  var container=document.getElementById('nora-flies');
+  if(container){
+    for(var i=0;i<38;i++){
+      (function(){
+        var div=document.createElement('div');
+        var size=Math.random()*4+2;
+        var x=Math.random()*100;
+        var y=Math.random()*100;
+        var dur=Math.random()*8+5;
+        var delay=Math.random()*12;
+        var hue=Math.floor(Math.random()*25+38);
+        div.style.cssText=['position:absolute','left:'+x+'%','top:'+y+'%','width:'+size+'px','height:'+size+'px','border-radius:50%','background:hsla('+hue+',80%,78%,0.9)','box-shadow:0 0 '+(size*4)+'px '+(size*1.5)+'px hsla('+hue+',70%,60%,0.35)','animation:nora-pulse '+dur+'s '+delay+'s infinite ease-in-out','pointer-events:none'].join(';');
+        container.appendChild(div);
+        function drift(){var nx=Math.random()*100,ny=Math.random()*100,t=Math.random()*14000+7000;div.style.transition='left '+t+'ms ease-in-out,top '+t+'ms ease-in-out';div.style.left=nx+'%';div.style.top=ny+'%';setTimeout(drift,t);}
+        setTimeout(drift,delay*1000);
+      })();
+    }
+  }
+})();
+</script>
