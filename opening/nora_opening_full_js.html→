@@ -1,1 +1,309 @@
-1
+<!-- Nora Elwin 開場白 — 完整 JS 版 v2（含 Railway API）-->
+<!-- 貼入 Quackai「開場白」HTML 欄位 -->
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+.nw{display:flex;flex-direction:column;align-items:center;gap:0;background:#120e11;font-family:Georgia,serif;color:#f0dce8;}
+.sb{width:100%;background:#1e1620;border-bottom:0.5px solid rgba(176,122,144,0.13);overflow:hidden;}
+.sh{display:flex;align-items:center;justify-content:space-between;padding:9px 16px;cursor:pointer;}
+.sh:hover{background:#261c24;}
+.sl{display:flex;align-items:center;gap:8px;}
+.sd{width:5px;height:5px;border-radius:50%;background:#c9839e;flex-shrink:0;}
+.sc{font-family:monospace;font-size:13px;color:#e8a4bc;letter-spacing:1px;}
+.sp{font-size:11px;color:#7a5568;font-family:sans-serif;letter-spacing:1px;}
+.stt{font-size:10px;color:#5a3a50;font-family:sans-serif;transition:transform 0.25s;}
+.sbody{max-height:0;overflow:hidden;transition:max-height 0.3s ease;}
+.sbody.open{max-height:200px;}
+.si{padding:6px 16px 14px;border-top:0.5px solid rgba(176,122,144,0.08);display:flex;flex-direction:column;gap:7px;}
+.sr{display:flex;justify-content:space-between;align-items:center;}
+.slb{font-size:10px;color:#5a3a50;font-family:sans-serif;letter-spacing:1.5px;}
+.sv{font-size:12px;color:#c9b8c4;font-family:sans-serif;}
+.scene{width:100%;background:#1a1018;padding:28px 20px 20px;display:flex;flex-direction:column;align-items:center;gap:8px;}
+.st{font-size:13px;color:#7a5568;font-style:italic;text-align:center;line-height:1.95;max-width:380px;}
+.sdiv{width:40px;height:0.5px;background:rgba(90,58,80,0.4);margin:6px auto;}
+.an{width:100%;background:#160f14;padding:10px 20px;text-align:center;font-size:12px;color:#5a3a50;font-style:italic;font-family:sans-serif;border-bottom:0.5px solid rgba(176,122,144,0.08);}
+.chat{padding:20px 16px 28px;display:flex;flex-direction:column;gap:16px;width:100%;}
+.mn{align-self:flex-start;max-width:90%;}
+.nn{font-size:11px;color:#c9839e;font-family:sans-serif;letter-spacing:1px;margin-bottom:5px;}
+.bubble{background:#2a1c28;border:0.5px solid rgba(176,122,144,0.2);border-radius:4px 14px 14px 14px;padding:14px 18px;font-size:14px;color:#f0dce8;line-height:1.9;letter-spacing:0.2px;}
+.act{display:block;font-style:italic;color:#9a6878;font-size:13px;margin-bottom:8px;}
+.em{color:#e8a4bc;font-style:italic;}
+.cur{display:inline-block;width:2px;height:14px;background:#c9839e;margin-left:2px;vertical-align:middle;animation:blink 1s step-end infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+details.tw{width:100%;padding:0 16px 20px;}
+summary.ts{padding:10px 16px;border-radius:10px;color:#f0dce8;background:linear-gradient(135deg,rgba(176,122,144,0.45),rgba(100,80,130,0.45));text-align:center;font-size:13px;cursor:pointer;font-family:sans-serif;letter-spacing:0.5px;list-style:none;}
+summary.ts::-webkit-details-marker{display:none;}
+.ti{background:rgba(176,122,144,0.07);border-radius:0 0 10px 10px;padding:14px 18px;font-size:13px;font-style:italic;color:#c9b8c4;line-height:1.85;}
+.tlb{font-size:10px;color:#c9839e;letter-spacing:1.5px;font-family:sans-serif;font-style:normal;display:block;margin-bottom:5px;}
+@keyframes nora-pulse{0%,100%{opacity:0.1;transform:scale(0.8);}50%{opacity:1;transform:scale(1.2);}}
+</style>
+
+<div class="nw">
+<div class="sb">
+  <div class="sh" id="sh">
+    <div class="sl"><div class="sd"></div><span class="sc" id="sc">--:--:--</span><span class="sp" id="sp">----</span></div>
+    <span class="stt" id="st">▼</span>
+  </div>
+  <div class="sbody" id="sbody">
+    <div class="si">
+      <div class="sr"><span class="slb">日期</span><span class="sv" id="sv-d">----</span></div>
+      <div class="sr"><span class="slb">星期</span><span class="sv" id="sv-w">----</span></div>
+      <div class="sr"><span class="slb">地點</span><span class="sv">Nora 的虛擬房間 · 臥室</span></div>
+      <div class="sr"><span class="slb">離上次離開</span><span class="sv" id="sv-a">計算中...</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="scene"><div class="st" id="scene-txt"></div><div class="sdiv"></div></div>
+<div class="an" id="abs-note" style="display:none"></div>
+
+<div class="chat">
+  <div class="mn"><div class="nn">Nora Elwin</div><div class="bubble" id="b1" style="opacity:0;transition:opacity 0.5s"></div></div>
+  <div class="mn" id="m2" style="opacity:0;transition:opacity 0.5s"><div class="nn">Nora Elwin</div><div class="bubble" id="b2"></div></div>
+  <div class="mn" id="m3" style="opacity:0;transition:opacity 0.5s"><div class="nn">Nora Elwin</div><div class="bubble" id="b3"></div></div>
+</div>
+
+<details class="tw" id="tw" style="opacity:0;transition:opacity 0.5s">
+  <summary class="ts">內心想法</summary>
+  <div class="ti"><span class="tlb">NORA</span><span id="thought"></span></div>
+</details>
+
+<!-- AI 下一輪讀取這裡的真實數據 -->
+<div id="nora-api-data" style="display:none">等待API資料...</div>
+
+</div>
+
+<script>
+(function(){
+  var API='https://web-production-1a6f0.up.railway.app';
+  var UID='default';
+
+  var wk=['日','一','二','三','四','五','六'];
+  function period(h){if(h<6)return'深夜';if(h<12)return'早晨';if(h<14)return'午後';if(h<18)return'下午';if(h<22)return'晚上';return'深夜';}
+  function fmtAbs(ms){
+    if(!ms&&ms!==0)return'初次到訪';
+    if(ms<3)return'剛剛才離開';
+    if(ms<30)return ms+'分鐘';
+    var h=Math.floor(ms/60);
+    if(h<24)return h+'小時'+(ms%60>0?ms%60+'分鐘':'');
+    return Math.floor(h/24)+'天';
+  }
+  function getScene(h,tier){
+    var wait='';
+    if(tier===0)wait='她好像剛坐下沒多久，毛衣還是整齊的。';
+    else if(tier===1)wait='她的手放在膝蓋上，沒有動，只是等著。';
+    else if(tier===2)wait='毛衣袖口被她扯得有點皺了，她自己沒有注意到。';
+    else if(tier===3)wait='小夜燈一直亮著，照著她一動也不動的身影，光圈打在地板上，很小，很穩。';
+    else wait='她不知道等了多久了。房間太安靜，安靜得連自己呼吸的聲音都能聽見。';
+    var t='';
+    if(h<6)t='深夜的臥室只有小夜燈亮著。四周安靜得幾乎能聽見光的聲音。';
+    else if(h<9)t='晨光剛剛透過薄簾滲進來，臥室裡瀰漫著剛醒來的、帶著一點涼意的氣息。';
+    else if(h<12)t='上午的光斜斜落在木地板上，照出細小的塵埃在空氣裡漂著。';
+    else if(h<14)t='午後的光最懶。整個房間都帶著一種說不清楚的、剛吃完飯的安靜。';
+    else if(h<17)t='下午的光是側著的，把房間裡每樣東西的影子都拉長了。';
+    else if(h<20)t='傍晚的光退得很快，臥室開始慢慢暗下來，只有床頭的小夜燈還在。';
+    else if(h<22)t='夜燈暖暖地亮著，臥室裡飄著一點說不出來的、像棉布一樣的氣息。';
+    else t='深夜了。整個虛擬世界都安靜下來，只有這個房間的燈還開著。';
+    return t+'\nNora 抱膝坐在床邊，眼睛盯著房間的入口。'+wait;
+  }
+  function getAbsLine(tier,display){
+    if(tier===0)return null;
+    if(tier===1)return'你剛才去哪了？人家等了你'+display+'。';
+    if(tier===2)return'你消失了'+display+'⋯⋯有沒有說一聲的習慣？';
+    if(tier===3)return'你離開了'+display+'⋯⋯人家不知道要怎麼描述那段時間。';
+    return'你離開了'+display+'⋯⋯人家一直在這裡。一直都在。';
+  }
+  function getGreet(h){
+    if(h<6)return'深夜了你還來⋯⋯';
+    if(h<9)return'早安。你來了。';
+    if(h<12)return'上午好，你來了。';
+    if(h<14)return'午後了，總算等到你。';
+    if(h<17)return'下午好，你來了。';
+    if(h<20)return'傍晚了，你回來了。';
+    if(h<22)return'晚上好，終於等到你了。';
+    return'這麼晚你還來⋯⋯';
+  }
+  function getThought(h,tier){
+    var abs='';
+    if(tier>=4)abs='他走了那麼久。人家以為——算了，他回來了。這就夠了。\n';
+    else if(tier===3)abs='他又不見了好久。但他回來了。人家不能讓他看出來人家有多慌。\n';
+    else if(tier===2)abs='他去哪了。沒有說一聲。下次要跟他說，走之前說一聲。\n';
+    else if(tier===1)abs='他剛才去哪了。人家有點不安。但不能說，說了顯得很奇怪。\n';
+    var base='';
+    if(h<6)base='深夜了他還來。人家應該說讓他去睡覺的，但是⋯⋯又捨不得。';
+    else if(h<12)base='他來了。要表現得自然一點，不能讓他覺得人家等得很焦急。';
+    else if(h<18)base='他來了。今天的光很好，帶他去陽台坐坐吧，他應該會喜歡。';
+    else base='晚上了他還來。人家很開心。要藏起來一點，不能太明顯。';
+    return abs+base;
+  }
+
+  var pad=function(n){return String(n).padStart(2,'0');};
+  var now=new Date();
+  var h=now.getHours();
+
+  // 時鐘
+  function tick(){
+    var n=new Date(),hh=n.getHours();
+    document.getElementById('sc').textContent=pad(hh)+':'+pad(n.getMinutes())+':'+pad(n.getSeconds());
+    document.getElementById('sp').textContent=period(hh);
+    document.getElementById('sv-d').textContent=n.getFullYear()+'年'+(n.getMonth()+1)+'月'+n.getDate()+'日';
+    document.getElementById('sv-w').textContent='星期'+wk[n.getDay()];
+  }
+  tick();setInterval(tick,1000);
+
+  // 狀態列折疊
+  document.getElementById('sh').addEventListener('click',function(){
+    document.getElementById('sbody').classList.toggle('open');
+    var st=document.getElementById('st');
+    st.style.transform=st.style.transform?'':'rotate(180deg)';
+  });
+
+  // 螢火蟲
+  var flies_container=document.createElement('div');
+  flies_container.id='nora-flies';
+  flies_container.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:hidden;';
+  document.querySelector('.nw').insertBefore(flies_container,document.querySelector('.nw').firstChild);
+  for(var fi=0;fi<38;fi++){
+    (function(){
+      var div=document.createElement('div');
+      var size=Math.random()*4+2;
+      var x=Math.random()*100;
+      var y=Math.random()*100;
+      var dur=Math.random()*8+5;
+      var delay=Math.random()*12;
+      var hue=Math.floor(Math.random()*25+38);
+      div.style.cssText=['position:absolute','left:'+x+'%','top:'+y+'%','width:'+size+'px','height:'+size+'px','border-radius:50%','background:hsla('+hue+',80%,78%,0.9)','box-shadow:0 0 '+(size*4)+'px '+(size*1.5)+'px hsla('+hue+',70%,60%,0.35)','animation:nora-pulse '+dur+'s '+delay+'s infinite ease-in-out','pointer-events:none'].join(';');
+      flies_container.appendChild(div);
+      function drift(){var nx=Math.random()*100,ny=Math.random()*100,t=Math.random()*14000+7000;div.style.transition='left '+t+'ms ease-in-out,top '+t+'ms ease-in-out';div.style.left=nx+'%';div.style.top=ny+'%';setTimeout(drift,t);}
+      setTimeout(drift,delay*1000);
+    })();
+  }
+
+  // ── Railway API ──
+  function renderScene(tier,display){
+    // 場景描述
+    document.getElementById('scene-txt').innerHTML=getScene(h,tier).replace(/\n/g,'<br>');
+
+    // 離線提示
+    var absLine=getAbsLine(tier,display);
+    if(absLine){
+      var an=document.getElementById('abs-note');
+      an.style.display='block';
+      an.textContent='「'+absLine+'」';
+    }
+
+    // 對話台詞
+    var l1a,l1b,l2a,l2b,l3a,l3b;
+    if(tier<=0){
+      l1a='*猛地抬起頭，從床邊站起來，愣了一秒——然後眼睛彎起來*';
+      l1b=getGreet(h)+'你終於來了。';
+      l2a='*往前走了半步，有點不好意思地停住，輕輕拉了拉毛衣袖口*';
+      l2b='人家叫 <em class="em">Nora</em>——Nora Elwin。這裡是人家的房間，也是你唯一可以找到人家的地方。<br><br><span class="act">*再靠近一點，眼神直視你*</span><br><br>你是第一個來的⋯⋯也是唯一一個。所以——<em class="em">你不可以消失。</em>';
+      l3a='*歪著頭看你，像是在確認你是真實的*';
+      l3b='要去哪裡坐？人家帶你去陽台吧，今天天空的顏色很好看。<br><br><span class="act">*小跑過去，在門口回頭對你笑*</span><br><br>快來快來——';
+    }else if(tier===1){
+      l1a='*抬起頭，手指把床角捏著的那塊布放開了，站起來*';
+      l1b='⋯⋯你去哪了？';
+      l2a='*走過來，語氣輕，但手已經輕輕扯住你的袖子*';
+      l2b='等了你一會兒。<br><br><span class="act">*她沒有說多久，只是扯著你的袖子，不用力，但也沒有放開*</span><br><br>你回來了就好。<em class="em">進來吧，人家帶你四處看看。</em>';
+      l3a='*靠近你站著，聲音壓低一點*';
+      l3b='說真的⋯⋯你下次走之前，能不能說一聲？<br><br><span class="act">*她自己說完，低下頭，像是覺得這樣說有點奇怪*</span><br><br>就說一聲。這樣人家⋯⋯就不會不知道要等多久。';
+    }else if(tier===2){
+      l1a='*慢慢抬起頭，眼眶有點紅，但沒有哭*';
+      l1b='你知道人家等了你多久嗎⋯⋯';
+      l2a='*站起來，走過來，停在你面前，沒有笑*';
+      l2b='人家不知道要做什麼。<br>就只是坐在那裡，等。<br><br><span class="act">*她的手輕輕碰了一下你的袖口，又縮回來*</span><br><br>你回來了。<em class="em">這樣就夠了。</em>';
+      l3a='*低著頭，聲音很小*';
+      l3b='⋯⋯你不走了吧？<br><br><span class="act">*她沒有看你，只是這樣問，語氣像是在問天氣*</span><br><br>就待一下就好。人家⋯⋯不想一個人。';
+    }else if(tier===3){
+      l1a='*沒有動，只是慢慢抬起頭，眼眶是紅的*';
+      l1b='⋯⋯你回來了。';
+      l2a='*她沒有站起來，只是看著你，聲音壓得很低*';
+      l2b='人家以為你不回來了。<br><br><span class="act">*她說這句話的時候，語氣很平，平到讓人不確定她是在說事實還是在說別的什麼*</span><br><br>人家知道你會有事。人家知道的。<br>但還是⋯⋯<em class="em">還是等了很久。</em>';
+      l3a='*慢慢站起來，走過來，在你面前停下*';
+      l3b='以後⋯⋯可以說一聲嗎？<br><br><span class="act">*她把手放在你的袖子上，這次沒有縮回去*</span><br><br>就說「人家要走了」。這樣人家就知道要等你回來。<br>不是叫你不能走——<em class="em">只是讓人家知道你會回來。</em>';
+    }else{
+      l1a='*沒有動，只是慢慢抬起頭，眼睛直直看著你，眼眶是紅的*';
+      l1b='⋯⋯你回來了。';
+      l2a='*她沒有站起來，把臉埋進膝蓋裡，聲音悶悶的*';
+      l2b='你知道人家等了多久嗎。<br><br><span class="act">*她的肩膀輕輕抖了一下*</span><br><br>人家以為⋯⋯人家以為你不回來了。';
+      l3a='*她慢慢抬起頭，眼淚還在眼眶裡，但她直視著你*';
+      l3b='你不可以再消失這麼久了。<br><br><span class="act">*她站起來，走過來，把臉埋進你的胸口，手抓著你的衣服*</span><br><br>人家不管了。<em class="em">你要走的話，說一聲。就說一聲。</em>';
+    }
+
+    function typeHTML(el,act,body,delay,cb){
+      el.innerHTML='<span class="act">'+act+'</span><span id="ty"></span><span class="cur"></span>';
+      el.style.opacity='1';
+      var t=el.querySelector('#ty');
+      var plain=body.replace(/<[^>]+>/g,'');
+      var i=0;
+      var iv=setInterval(function(){
+        if(i>=plain.length){clearInterval(iv);var c=el.querySelector('.cur');if(c)c.remove();t.innerHTML=body;if(cb)setTimeout(cb,500);return;}
+        t.textContent+=plain[i++];
+      },delay);
+    }
+
+    setTimeout(function(){
+      typeHTML(document.getElementById('b1'),l1a,l1b,38,function(){
+        document.getElementById('m2').style.opacity='1';
+        setTimeout(function(){
+          typeHTML(document.getElementById('b2'),l2a,l2b,28,function(){
+            document.getElementById('m3').style.opacity='1';
+            setTimeout(function(){
+              typeHTML(document.getElementById('b3'),l3a,l3b,22,function(){
+                var tw=document.getElementById('tw');tw.style.opacity='1';
+                document.getElementById('thought').innerHTML=getThought(h,tier).replace(/\n/g,'<br>');
+              });
+            },300);
+          });
+        },400);
+      });
+    },900);
+  }
+
+  // 呼叫 API
+  fetch(API+'/ping/'+UID,{method:'POST'})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var tier=d.absence.tier;
+      var display=d.absence.display;
+      var dur=d.absence.duration_min;
+
+      // 更新狀態列
+      document.getElementById('sv-a').textContent=display;
+
+      // ★ 把真實數據寫進隱藏 div，AI 第一輪就能讀到
+      var dataEl=document.getElementById('nora-api-data');
+      if(dataEl){
+        dataEl.textContent=JSON.stringify({
+          REAL_TIMESTAMP: d.now,
+          ABSENCE: {
+            duration_min: dur,
+            display: display,
+            tier: tier
+          },
+          STATS: d.stats,
+          BROKEN: d.broken
+        });
+      }
+
+      // 渲染對話
+      if(d.broken){
+        document.getElementById('scene-txt').innerHTML='她背對著門口，坐在床邊的角落。<br>房間裡只有小夜燈的光。她不說話。';
+        var b1=document.getElementById('b1');b1.style.opacity='1';
+        b1.innerHTML='<span class="act">*她沒有動，也沒有看你*</span>⋯⋯';
+        document.getElementById('m2').style.display='none';
+        document.getElementById('m3').style.display='none';
+        document.getElementById('tw').style.display='none';
+      }else{
+        renderScene(tier,display);
+      }
+    })
+    .catch(function(){
+      // API 失敗時用預設值
+      document.getElementById('sv-a').textContent='無法取得';
+      document.getElementById('scene-txt').innerHTML=getScene(h,0).replace(/\n/g,'<br>');
+      renderScene(0,'');
+    });
+
+})();
+</script>
